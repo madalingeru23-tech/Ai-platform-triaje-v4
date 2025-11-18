@@ -1,0 +1,12 @@
+[
+  {
+    "id": 1,
+    "first_name": "Iustin",
+    "last_name": "Vîntu",
+    "specialty": "Medicină Internă",
+    "stamp_url": "/static/img/parafa_vintu.png",
+    "signature_url": "/static/img/semnatura_vintu.png",
+    "pin_hash": "8ab97a3bacaffe17c5a8224501884c0f4f7837c1e0a72427b3a245b7937e3d00"
+  }
+]
+

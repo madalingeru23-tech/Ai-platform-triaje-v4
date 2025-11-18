@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🗺️ Harta spitalului</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <style>
+    body { font-family: system-ui; margin: 2rem; }
+    h1 { margin-bottom: 1rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+    .ward {
+      border-radius: 12px;
+      padding: 1rem;
+      color: white;
+      text-align: center;
+      transition: transform 0.2s ease;
+    }
+    .ward:hover { transform: scale(1.05); cursor: pointer; }
+    .critică { background: #b71c1c; }
+    .chirurgical { background: #1976d2; }
+    .medical { background: #388e3c; }
+    .izolare { background: #6a1b9a; }
+    .ambulatoriu { background: #f57c00; }
+    .occupancy {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .bar {
+      height: 8px;
+      background: rgba(255,255,255,0.4);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .fill {
+      height: 100%;
+      background: #fff;
+      transition: width 0.4s ease;
+    }
+  </style>
+</head>
+<body>
+  <h1>🗺️ Harta Spitalului Regional</h1>
+  <p>Vizualizare interactivă a gradului de ocupare pe secții</p>
+  <div class="grid" id="wardGrid"></div>
+
+  <script>
+    async function loadWardmap() {
+      const res = await fetch("/api/wardmap");
+      const wards = await res.json();
+      const grid = document.getElementById("wardGrid");
+      grid.innerHTML = "";
+
+      wards.forEach(w => {
+        const percent = Math.round((w.current / w.capacity) * 100);
+        const el = document.createElement("div");
+        el.className = `ward ${w.category}`;
+        el.innerHTML = `
+          <h3>${w.ward_name}</h3>
+          <div class="occupancy">${w.current} / ${w.capacity} (${percent}%)</div>
+          <div class="bar"><div class="fill" style="width:${percent}%;"></div></div>
+        `;
+        grid.appendChild(el);
+      });
+    }
+    loadWardmap();
+  </script>
+   <script src="/static/js/user.js"></script>
+</body>
+</html>

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Externare Ambulatoriu</title>
+
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/static/triaj.css" />
+  <script src="/static/js/user.js" defer></script>
+
+  <style>
+    body {
+      background: linear-gradient(135deg,#673ab7,#3f51b5);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow-y: auto;
+    }
+    main {
+      padding: 2rem;
+      max-width: 1000px;
+      margin: auto;
+      overflow-y: auto;
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .col {
+      flex: 1 1 260px;
+      min-width: 0;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 0.5rem 0.6rem;
+      box-sizing: border-box;
+    }
+    input[readonly] {
+      background: #f5f5f5;
+    }
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    .muted {
+      color: #666;
+      font-size: 0.85rem;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.8rem;
+    }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 0.55rem 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .btn-primary {
+      background: #5b2ff5;
+      color: #fff;
+    }
+    .btn-primary:hover {
+      background: #431bcc;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: #5b2ff5;
+      border: 1px solid #5b2ff5;
+    }
+    .btn-ghost:hover {
+      background: rgba(91,47,245,0.06);
+    }
+
+    .status {
+      margin-top: 0.4rem;
+      font-size: 0.85rem;
+    }
+    .status.ok  { color: #2e7d32; }
+    .status.err { color: #c62828; }
+
+    .upload-list {
+      margin-top: 0.5rem;
+      font-size: 0.85rem;
+      padding-left: 1.2rem;
+    }
+    .upload-list li {
+      margin-bottom: 2px;
+    }
+
+    .ai-hint {
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 0.3rem;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .ai-hint span {
+      font-size: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🩺 Externare în Ambulatoriu</h1>
+    <p>Generare automată a biletului de externare pentru pacienții tratați în regim ambulator.</p>
+  </header>
+
+  <main>
+    <!-- 🔹 DATE PACIENT -->
+    <section class="card">
+      <h2>Date pacient</h2>
+      <p class="muted">Datele sunt preluate automat din ultimul triaj efectuat, dacă există.</p>
+
+      <div class="row">
+        <div class="col">
+          <label for="p_first_name">Prenume</label>
+          <input id="p_first_name" type="text" readonly />
+        </div>
+        <div class="col">
+          <label for="p_last_name">Nume</label>
+          <input id="p_last_name" type="text" readonly />
+        </div>
+        <div class="col">
+          <label for="p_cnp">CNP</label>
+          <input id="p_cnp" type="text" readonly />
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:0.6rem;">
+        <div class="col">
+          <label for="p_triage_level">Nivel triaj</label>
+          <input id="p_triage_level" type="text" readonly />
+        </div>
+        <div class="col">
+          <label>Context triaj</label>
+          <div id="triage_context" class="muted">Nu există încă un triaj recent salvat.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 🔹 CONȚINUT MEDICAL -->
+    <section class="card">
+      <h2>Conținut medical</h2>
+
+      <div class="ai-hint">
+        <span>🤖</span>
+        <span>Poți genera un prim draft cu ajutorul AI și apoi îl modifici după caz.</span>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn-ghost" id="btn_ai_draft">Generează draft AI</button>
+      </div>
+
+      <div style="margin-top:0.8rem;">
+        <label for="diag_txt">Diagnostic la externare</label>
+        <textarea id="diag_txt" placeholder="Ex: Durere toracică nespecifică, fără semne de ischemie acută..."></textarea>
+      </div>
+
+      <div style="margin-top:0.7rem;">
+        <label for="evo_txt">Evoluție / Motiv prezentare</label>
+        <textarea id="evo_txt" placeholder="Ex: Pacientul s-a prezentat pentru..., pe durata monitorizării..."></textarea>
+      </div>
+
+      <div style="margin-top:0.7rem;">
+        <label for="rec_txt">Recomandări / Conduită la domiciliu</label>
+        <textarea id="rec_txt" placeholder="Ex: Tratament simptomatic cu..., reevaluare la..., prezentare de urgență dacă..."></textarea>
+      </div>
+    </section>
+
+    <!-- 🔹 UPLOAD INVESTIGAȚII -->
+    <section class="card">
+      <h2>Investigații atașate</h2>
+      <p class="muted">
+        Poți încărca fișiere PDF (analize, CT, RMN etc.) care vor fi atașate ca pagini suplimentare la biletul de externare.
+      </p>
+
+      <input id="inv_files" type="file" multiple accept="application/pdf" />
+      <div class="actions">
+        <button type="button" class="btn-ghost" id="btn_upload_inv">Încarcă investigațiile selectate</button>
+      </div>
+
+      <div id="upload_status" class="status"></div>
+      <ul id="upload_list" class="upload-list"></ul>
+    </section>
+
+    <!-- 🔹 GENERARE PDF -->
+    <section class="card">
+      <h2>Generare PDF externare</h2>
+      <p class="muted">
+        La generare, PDF-ul va include datele pacientului, conținutul completat mai sus și, pe paginile următoare,
+        investigațiile PDF atașate.
+      </p>
+      <div class="actions">
+        <button type="button" class="btn-primary" id="btn_generate_pdf">📄 Generează PDF de externare</button>
+      </div>
+      <div id="pdf_status" class="status"></div>
+    </section>
+  </main>
+
+  <script>
+    // 🔹 lista globală trimisă backend-ului
+    const uploadedInvestigations = [];
+
+    /* -------------------------------------------------------
+       TRIAJ DIN localStorage
+    ------------------------------------------------------- */
+    function loadLastTriage() {
+      const raw = localStorage.getItem("last_triage");
+      if (!raw) return;
+
+      try {
+        const data = JSON.parse(raw);
+
+        document.getElementById("p_first_name").value = data.first_name || "";
+        document.getElementById("p_last_name").value  = data.last_name  || "";
+        document.getElementById("p_cnp").value        = data.cnp        || "";
+        document.getElementById("p_triage_level").value = data.level || "";
+
+        const lvl = data.level || "?";
+        const ctx = document.getElementById("triage_context");
+        ctx.textContent = `Ultimul triaj: nivel ${lvl}`;
+      } catch (e) {
+        console.error("Eroare la citirea last_triage:", e);
+      }
+    }
+
+    /* -------------------------------------------------------
+       DRAFT AI SIMPLU
+    ------------------------------------------------------- */
+    function generateAiDraft() {
+      const last = localStorage.getItem("last_triage");
+      let level = 3;
+      let reason = "";
+
+      if (last) {
+        try {
+          const d = JSON.parse(last);
+          level = d.level || 3;
+          reason = d.reason || "";
+        } catch {}
+      }
+
+      let diag = "";
+      let evo  = "";
+      let rec  = "";
+if (level == 1) {
+  diag = "Stare critică la prezentare, stabilizată după intervenție rapidă. Nu se mai obiectivează criterii de instabilitate după reevaluările succesive.";
+  
+  evo  = "Pacientul s-a prezentat cu parametri vitali sever alterați, necesitând intervenție imediată. După administrarea tratamentului și monitorizare continuă, statusul clinic s-a ameliorat progresiv, atingând valori stabile și predictibile. Nu persistă semne de deteriorare acută.";
+  
+  rec  = "Se recomandă monitorizare atentă la domiciliu, evitarea efortului fizic intens, menținerea unei bune hidratări și prezentarea de urgență la reapariția durerilor severe, dispneei, alterării stării generale sau oricărui simptom nou. Reevaluare rapidă în ambulator sau la medicul de familie în 24–48 de ore.";
+}
+
+else if (level == 2) {
+  diag = "Episod acut cu risc moderat, evaluat complet și stabilizat în serviciul de urgență. Fără semne clinice sau paraclinice care să impună internarea.";
+  
+  evo  = "Simptomatologia inițială a fost intensă, necesitând investigații și tratament imediat. Pe parcursul supravegherii, parametrii vitali s-au ameliorat, iar evoluția a fost favorabilă, cu dispariția progresivă a simptomelor acute. Nu se evidențiază semne de agravare.";
+  
+  rec  = "Recomandăm tratament simptomatic conform schemei prescrise, hidratare adecvată și evitare factori declanșatori. Reevaluare la medicul de familie sau specialist în 24–72 de ore. Prezentare imediată la UPU dacă apar dureri intense, febră înaltă, dispnee, stare de confuzie sau agravarea semnificativă a simptomelor.";
+}
+
+else {
+  diag = "Patologie de severitate medie, investigată în ambulator/UPU, cu status hemodinamic stabil. Fără criterii care să indice necesitatea unei internări.";
+  
+  evo  = "Pacientul s-a prezentat cu simptomatologie moderată, fără modificări critice la examenul clinic sau investigații. Pe durata supravegherii, starea generală a rămas constantă, cu parametri vitali în limite acceptabile și fără semne de progresie acută.";
+  
+  rec  = "Recomandăm monitorizare la domiciliu, regim de viață echilibrat, evitarea suprasolicitării și urmarea tratamentului prescris. Reevaluare programată la medicul de familie sau specialist în următoarele zile. Prezentare de urgență dacă apar semne noi sau agravare simptomatică.";
+}
+      if (reason) {
+        evo = `Motivul prezentării: ${reason}.\n` + evo;
+      }
+
+      const diagEl = document.getElementById("diag_txt");
+      const evoEl  = document.getElementById("evo_txt");
+      const recEl  = document.getElementById("rec_txt");
+
+      if (!diagEl.value) diagEl.value = diag;
+      if (!evoEl.value)  evoEl.value  = evo;
+      if (!recEl.value)  recEl.value  = rec;
+    }
+
+    /* -------------------------------------------------------
+       UPLOAD INVESTIGAȚII PDF
+    ------------------------------------------------------- */
+    async function uploadInvestigations() {
+      const input    = document.getElementById("inv_files");
+      const files    = input.files;
+      const statusEl = document.getElementById("upload_status");
+      const listEl   = document.getElementById("upload_list");
+
+      statusEl.className = "status";
+      statusEl.textContent = "";
+
+      if (!files.length) {
+        statusEl.textContent = "Selectează cel puțin un fișier PDF.";
+        statusEl.classList.add("err");
+        return;
+      }
+
+      for (let file of files) {
+        const fd = new FormData();
+        fd.append("file", file);
+
+        try {
+          const res = await fetch("/api/uploads/investigatie", {
+            method: "POST",
+            body: fd
+          });
+
+          if (!res.ok) {
+            const j = await res.json().catch(() => ({}));
+            throw new Error(j.detail || "Eroare la încărcarea fișierului.");
+          }
+
+          const data = await res.json();
+          console.log("Răspuns upload:", data);
+
+          const stored =
+            data.filename ||
+            data.stored_name ||
+            data.file ||
+            data.name;
+
+          if (!stored) {
+            console.error("Răspuns backend fără nume de fișier:", data);
+            continue; // nu îl adăugăm în listă
+          }
+
+          // reținem numele real folosit de backend
+          uploadedInvestigations.push(stored);
+
+          const li = document.createElement("li");
+          li.textContent = `${file.name} → ${stored}`;
+          listEl.appendChild(li);
+
+        } catch (e) {
+          console.error(e);
+          statusEl.textContent = "Eroare la încărcarea unor fișiere.";
+          statusEl.classList.add("err");
+          return;
+        }
+      }
+
+      statusEl.textContent = "Fișiere încărcate cu succes.";
+      statusEl.classList.add("ok");
+      input.value = "";
+    }
+
+    /* -------------------------------------------------------
+       GENERARE PDF FINAL
+    ------------------------------------------------------- */
+    async function generatePdf() {
+      const statusEl = document.getElementById("pdf_status");
+      statusEl.className = "status";
+      statusEl.textContent = "Se generează PDF-ul...";
+
+      const patientName =
+        ((document.getElementById("p_first_name").value || "") + " " +
+         (document.getElementById("p_last_name").value  || "")).trim();
+
+      const payload = {
+        patient_name: patientName,
+        cnp: document.getElementById("p_cnp").value || null,
+        age: null,
+        sex: null,
+
+        diagnosis:       document.getElementById("diag_txt").value || "",
+        evolution:       document.getElementById("evo_txt").value  || "",
+        recommendations: document.getElementById("rec_txt").value  || "",
+
+        triage_level: Number(document.getElementById("p_triage_level").value || 0),
+        triage_color: null,
+        reason: null,
+
+        // aici trimitem efectiv fișierele încărcate
+        investigations: uploadedInvestigations
+      };
+
+      if (!payload.patient_name) {
+        statusEl.textContent = "Nu există date despre pacient (nume).";
+        statusEl.classList.add("err");
+        return;
+      }
+      if (!payload.diagnosis.trim()) {
+        statusEl.textContent = "Completează diagnosticul la externare.";
+        statusEl.classList.add("err");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/pdf/externare", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) {
+          const j = await res.json().catch(() => ({}));
+          console.error("Eroare backend /api/pdf/externare:", j);
+          throw new Error(j.detail || "Eroare la generarea PDF-ului.");
+        }
+
+        const blob = await res.blob();
+        const url  = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `externare_${payload.patient_name.replace(/\s+/g,"_")}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        statusEl.textContent = "PDF generat și descărcat cu succes.";
+        statusEl.classList.add("ok");
+      } catch (e) {
+        console.error(e);
+        statusEl.textContent = "Eroare la generarea PDF-ului.";
+        statusEl.classList.add("err");
+      }
+    }
+
+    /* -------------------------------------------------------
+       INIT
+    ------------------------------------------------------- */
+    document.addEventListener("DOMContentLoaded", () => {
+      loadLastTriage();
+      document.getElementById("btn_ai_draft")
+        .addEventListener("click", generateAiDraft);
+      document.getElementById("btn_upload_inv")
+        .addEventListener("click", uploadInvestigations);
+      document.getElementById("btn_generate_pdf")
+        .addEventListener("click", generatePdf);
+    });
+  </script>
+</body>
+</html>

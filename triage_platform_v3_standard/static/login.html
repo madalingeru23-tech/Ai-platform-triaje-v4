@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Autentificare Medic</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    body{background:linear-gradient(135deg,#673ab7,#3f51b5);font-family:Inter,system-ui;}
+    .card{max-width:420px;margin:10vh auto;background:#fff;border-radius:16px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+    h1{margin:0 0 6px}
+    .muted{color:#666;margin:0 0 18px}
+    input{font-size:28px; letter-spacing:8px; text-align:center; width:100%; padding:10px 12px; border-radius:10px; border:1px solid #ccc;}
+    button{margin-top:12px;width:100%; background:#5b2ff5;color:#fff;border:0;border-radius:10px;padding:12px;font-weight:700;cursor:pointer}
+    button:hover{background:#431bcc}
+    .error{margin-top:10px;color:#b00020}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔐 Autentificare Medic</h1>
+    <p class="muted">Introduceți PIN-ul de 4 cifre</p>
+    <input id="pin" maxlength="4" inputmode="numeric" placeholder="••••" />
+    <button id="loginBtn">Intră</button>
+    <div id="msg" class="error"></div>
+  </div>
+
+  <script>
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    const pin = (document.getElementById("pin").value || "").trim();
+    const msg = document.getElementById("msg");
+    msg.textContent = "";
+    if (!/^\d{4}$/.test(pin)) {
+      msg.textContent = "PIN invalid. Folosiți exact 4 cifre.";
+      return;
+    }
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {"Content-Type":"application/json"},
+        body: JSON.stringify({ pin })
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(()=>({detail:"Eroare"}));
+        msg.textContent = j.detail || "PIN greșit.";
+        return;
+      }
+      // succes -> mergem în dashboard
+      window.location.href = "/static/doctor.html";
+    } catch (e) {
+      msg.textContent = "Eroare de rețea.";
+    }
+  });
+  </script>
+   <script src="/static/js/user.js"></script>
+</body>
+</html>

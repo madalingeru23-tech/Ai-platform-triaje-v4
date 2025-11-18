@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cont Medic</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <style>
+    body {
+      background: linear-gradient(135deg, #673ab7, #3f51b5);
+      font-family: "Inter", sans-serif;
+      color: white;
+      text-align: center;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    p {
+      color: #ddd;
+      font-size: 1.2rem;
+      color: rgb(100, 97, 97);
+      text-shadow: 0 2px 4px rgb(255, 255, 255);
+    }
+
+    .footer-label {
+      position: fixed;
+      bottom: 10px;
+      left: 15px;
+      font-size: 0.95rem;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 8px 14px;
+      border-radius: 10px;
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    button {
+      background: #5b2ff5;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+
+    button:hover {
+      background: #431bcc;
+    }
+      
+    h1#welcomeText {
+    color: black;
+    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.6);
+  }
+
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1 id="welcomeText">Bine ați venit, domnule doctor!</h1>
+    <p>Accesați sistemul pentru a gestiona pacienții și externările.</p>
+    <div style="margin-top:1.5rem;">
+      <button onclick="window.location.href='/static/triaj.html'">🩺 Triaj</button>
+      <button id="logoutBtn">🚪 Deconectare</button>
+    </div>
+  </main>
+
+  <div class="footer-label" id="footerInfo"></div>
+
+  <script>
+  async function loadDoctor() {
+    try {
+      const res = await fetch("/api/auth/me");
+      if (!res.ok) {
+        window.location.href = "/static/login.html";
+        return;
+      }
+      const doc = await res.json();
+      document.getElementById("welcomeText").textContent = `Bine ați venit, Dr. ${doc.full_name}!`;
+      document.getElementById("footerInfo").textContent = `👨‍⚕️ ${doc.full_name} — ${doc.specialty}`;
+    } catch (err) {
+      console.error("Eroare la obținerea datelor medicului:", err);
+      window.location.href = "/static/login.html";
+    }
+  }
+
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/static/login.html";
+  });
+
+  loadDoctor();
+  </script>
+  <script src="/static/js/user.js"></script>
+</body>
+</html>

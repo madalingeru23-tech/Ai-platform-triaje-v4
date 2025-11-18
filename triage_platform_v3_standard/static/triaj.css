@@ -1,0 +1,90 @@
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(120deg, #2e3192, #1bffff);
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #222;
+}
+
+.container {
+  background: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.2);
+  width: 380px;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #2e3192;
+}
+
+label {
+  display: block;
+  margin-top: 10px;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  background: #2e3192;
+  color: white;
+  font-weight: bold;
+  margin-top: 20px;
+  cursor: pointer;
+}
+
+.rezultat {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+/* ==== TRIAJ COLOR CODING ==== */
+
+.result-box {
+  transition: background-color 0.4s ease, color 0.3s ease;
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  color: #111;
+  font-size: 0.95rem;
+}
+
+/* NIVEL I — ROȘU */
+.result-red {
+  background-color: #ffebee !important;
+  border-left: 6px solid #d32f2f !important;
+}
+
+/* NIVEL II — PORTOCALIU */
+.result-orange {
+  background-color: #fff3e0 !important;
+  border-left: 6px solid #ef6c00 !important;
+}
+
+/* NIVEL III — GALBEN */
+.result-yellow {
+  background-color: #fffde7 !important;
+  border-left: 6px solid #fbc02d !important;
+}
+
+/* NIVEL IV — VERDE */
+.result-green {
+  background-color: #e8f5e9 !important;
+  border-left: 6px solid #388e3c !important;
+}
+
+/* NIVEL V — ALBASTRU */
+.result-blue {
+  background-color: #e3f2fd !important;
+  border-left: 6px solid #1976d2 !important;
+}

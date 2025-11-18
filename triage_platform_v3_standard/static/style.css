@@ -1,0 +1,31 @@
+:root { --primary:#5a43f5; --primary-dark:#4833d8; --bg1:#f6f7fb; }
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial;color:#111;background:linear-gradient(135deg,#4c3aff,#7a5fff) fixed}
+header{color:#fff;text-align:center;padding:2rem 1rem}
+header nav{margin-top:1rem}
+header nav a{color:#fff;text-decoration:none;padding:.5rem 1rem;border-radius:.5rem;opacity:.85}
+header nav a.active,header nav a:hover{background:rgba(255,255,255,.18);opacity:1}
+main{max-width:980px;margin:0 auto 3rem;background:var(--bg1);padding:2rem;border-radius:1.25rem;box-shadow:0 10px 30px rgba(0,0,0,.15)}
+.card{background:#fff;border-radius:1rem;padding:1.25rem 1.5rem;margin:1rem 0;box-shadow:0 6px 16px rgba(0,0,0,.08)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}
+label{font-size:.9rem;font-weight:600;display:flex;flex-direction:column;gap:.35rem}
+input,select{border:1px solid #dcdde4;border-radius:.6rem;padding:.55rem .7rem;font-size:.95rem;background:#fff}
+button{background:var(--primary);color:#fff;border:none;border-radius:.7rem;padding:.75rem 1rem;font-weight:700;cursor:pointer}
+button:hover{background:var(--primary-dark)}
+button.secondary{background:#e9eaf3;color:#333}
+.row{display:flex;gap:.75rem}
+.hidden{display:none}
+@media (max-width:900px){.grid{grid-template-columns:1fr 1fr}}
+@media (max-width:600px){.grid{grid-template-columns:1fr}}
+.btn-eval {
+  background: #5b46f6;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-eval:hover {
+  background: #4430d4;
+}

@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Internare Pacient</title>
+
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/static/triaj.css" />
+
+  <style>
+    body {
+      background: linear-gradient(135deg, #673ab7, #3f51b5);
+      color: #111;
+      font-family: "Inter", sans-serif;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    header h1 {
+      color: #fff;
+      font-size: 1.9rem;
+    }
+
+    header p {
+      color: #ddd;
+      font-size: 1rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    button {
+      background: #5b2ff5;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1.2rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button:hover {
+      background: #431bcc;
+    }
+
+    h2 {
+      margin-top: 1rem;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 0.8rem;
+      border-collapse: collapse;
+    }
+
+    table th, table td {
+      border-bottom: 1px solid #ccc;
+      padding: 6px 8px;
+      text-align: left;
+      font-size: 0.95rem;
+    }
+
+    nav {
+      margin-top: 0.5rem;
+    }
+
+    nav a {
+      color: #fff;
+      font-weight: 500;
+      text-decoration: none;
+      margin: 0 8px;
+    }
+
+    nav a.active {
+      text-decoration: underline;
+      font-weight: 700;
+    }
+
+    #aiSuggestionBox {
+      display: none;
+      margin-top: 1rem;
+      background: #eef;
+      border-radius: 12px;
+      padding: 1rem;
+    }
+
+    #aiSuggestionBox h3 {
+      margin-bottom: 0.5rem;
+    }
+  </style>
+
+  <script defer>
+document.addEventListener("DOMContentLoaded", () => {
+  const saved = localStorage.getItem("last_triage");
+  console.log("last_triage:", saved);
+
+  if (!saved) return;
+  try {
+    const data = JSON.parse(saved);
+    if (data.first_name) document.getElementById("first_name").value = data.first_name;
+    if (data.last_name)  document.getElementById("last_name").value  = data.last_name;
+    if (data.level)      document.getElementById("triage_level").value = String(data.level);
+    localStorage.removeItem("last_triage");
+  } catch (e) {
+    console.error("Eroare parsare last_triage:", e);
+  }
+});
+  </script>
+</head>
+
+<body>
+  <header>
+    <h1>🏥 Internare Pacient</h1>
+    <p>Monitorizare pacienți și evidență internări</p>
+    <nav>
+      <a href="/static/triaj.html">🔹 Triaj Pacienți</a> |
+      <a href="/static/admission.html" class="active">🏥 Internări</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>📋 Formular internare</h2>
+      <form id="admissionForm">
+        <input type="text" id="first_name" placeholder="Prenume" required />
+        <input type="text" id="last_name" placeholder="Nume" required />
+        <input type="text" id="reason" placeholder="Motiv internare" />
+        <select id="triage_level">
+          <option value="1">Roșu (I)</option>
+          <option value="2">Portocaliu (II)</option>
+          <option value="3">Galben (III)</option>
+          <option value="4">Verde (IV)</option>
+          <option value="5">Albastru (V)</option>
+        </select>
+        <button type="button" id="aiSuggestBtn">💡 Obține sugestie AI</button>
+        <button type="submit">✅ Creează internare</button>
+      </form>
+    </section>
+    <!-- 🔹 Caseta AI – versiune colorată -->
+<div id="aiSuggestionBox" class="card" style="display:none; margin-top:1rem;">
+  <h3>💡 Sugestie AI</h3>
+  <p id="suggestionText">Aici va apărea sugestia sistemului...</p>
+  <div class="actions">
+    <button id="confirmSuggestion" class="primary">Confirmă internarea sugerată</button>
+    <button id="editWard" class="ghost">Modifică secția manual</button>
+  </div>
+</div>
+
+<style>
+  #aiSuggestionBox {
+    border-left: 6px solid transparent;
+    transition: background 0.4s ease, border-color 0.4s ease;
+  }
+
+  .ward-upu {
+    background: #f8d7da;
+    border-color: #d32f2f;
+  }
+
+  .ward-ati {
+    background: #ffe0b2;
+    border-color: #ef6c00;
+  }
+
+  .ward-chirurgie {
+    background: #fff9c4;
+    border-color: #fbc02d;
+  }
+
+  .ward-medicina {
+    background: #e8f5e9;
+    border-color: #388e3c;
+  }
+
+  .ward-ambulatoriu {
+    background: #e3f2fd;
+    border-color: #1976d2;
+  }
+</style>
+
+
+    <div id="aiSuggestionBox" class="card">
+      <h3>💡 Sugestie AI</h3>
+      <p id="suggestionText">Aici va apărea sugestia sistemului...</p>
+      <div class="actions">
+        <button id="confirmSuggestion" class="primary">Confirmă internarea sugerată</button>
+        <button id="editWard" class="ghost">Modifică secția manual</button>
+      </div>
+    </div>
+
+    <section class="card" style="margin-top: 1rem;">
+      <h2>📄 Lista pacienților internați</h2>
+      <button id="refreshBtn">🔄 Actualizează</button>
+      <table id="admissionTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Prenume</th>
+            <th>Nume</th>
+            <th>Motiv</th>
+            <th>Nivel</th>
+            <th>Culoare</th>
+            <th>Timp</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    // 🔹 Sugestie AI pentru secția de internare
+   document.getElementById("aiSuggestBtn").addEventListener("click", async () => {
+  const triageLevel = Number(document.getElementById("triage_level").value);
+  const colorText = document
+    .getElementById("triage_level")
+    .selectedOptions[0]
+    .text.split(" ")[0]
+    .toLowerCase();
+  const reasonText = document.getElementById("reason").value || "necunoscut";
+
+  const res = await fetch("/api/wardmap/suggest", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      triage_level: triageLevel,
+      triage_color: colorText,
+      reason: reasonText
+    })
+  });
+
+
+      if (!res.ok) {
+        alert("Eroare la obținerea sugestiei AI.");
+        return;
+      }
+
+      const data = await res.json();
+      const box = document.getElementById("aiSuggestionBox");
+const text = document.getElementById("suggestionText");
+box.style.display = "block";
+// 🔹 Confirmarea internării sugerate
+const confirmBtn = document.getElementById("confirmSuggestion");
+if (confirmBtn) {
+  confirmBtn.addEventListener("click", async () => {
+    const first_name = document.getElementById("first_name").value;
+    const last_name  = document.getElementById("last_name").value;
+    const level      = Number(document.getElementById("triage_level").value);
+    const ward       = document.getElementById("suggestionText").textContent.match(/Secție sugerată:\s*(.*)/i)?.[1] || "Neatribuit";
+    const triage_color = ["red","orange","yellow","green","blue"][level-1] || "gray";
+
+    const payload = {
+      first_name,
+      last_name,
+      reason: `Internare automată în ${ward}`,
+      triage_level: level,
+      triage_color: triage_color
+    };
+
+    try {
+      const res = await fetch("/api/admissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        alert(`✅ Pacient internat automat în secția: ${ward}`);
+        document.getElementById("aiSuggestionBox").style.display = "none";
+        await loadAdmissions();
+      } else {
+        alert("⚠️ Eroare la internare automată!");
+      }
+    } catch (err) {
+      console.error("Eroare confirmare internare:", err);
+      alert("❌ Eroare de conexiune la server!");
+    }
+  });
+}
+
+text.innerHTML = `
+  <strong>Secție sugerată:</strong> ${data.suggested_ward}<br>
+  <em>${data.reason}</em><br>
+  <span>Grad de încredere: ${(data.confidence * 100).toFixed(0)}%</span>
+`;
+
+// 🔹 Curățăm clasele vechi și aplicăm una nouă în funcție de secție
+box.className = "card";
+const ward = data.suggested_ward.toLowerCase();
+if (ward.includes("upu")) box.classList.add("ward-upu");
+else if (ward.includes("ati")) box.classList.add("ward-ati");
+else if (ward.includes("chirurg")) box.classList.add("ward-chirurgie");
+else if (ward.includes("intern")) box.classList.add("ward-medicina");
+else box.classList.add("ward-ambulatoriu");
+
+    });
+
+    // 🔹 Listare internări existente
+    async function loadAdmissions() {
+      const res = await fetch("/api/admissions");
+      const data = await res.json();
+      const tbody = document.querySelector("#admissionTable tbody");
+      tbody.innerHTML = "";
+
+      data.forEach(a => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${a.id}</td>
+          <td>${a.first_name}</td>
+          <td>${a.last_name}</td>
+          <td>${a.reason || "-"}</td>
+          <td>${a.triage_level}</td>
+          <td>${a.triage_color.toUpperCase()}</td>
+          <td>${a.timestamp}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    // 🔹 Creare internare
+    document.getElementById("admissionForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const levelSelect = document.getElementById("triage_level");
+      const colorText = levelSelect.selectedOptions[0].text.split(" ")[0].toLowerCase();
+
+      const payload = {
+        first_name: document.getElementById("first_name").value,
+        last_name: document.getElementById("last_name").value,
+        reason: document.getElementById("reason").value || "—",
+        triage_level: Number(document.getElementById("triage_level").value),
+        triage_color: colorText
+      };
+// 🧠 Solicităm sugestia AI pentru secția potrivită
+try {
+  const suggestRes = await fetch("/api/wardmap/suggest", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      triage_level: payload.triage_level,
+      triage_color: payload.triage_color,
+      reason: payload.reason
+    })
+  });
+
+  if (suggestRes.ok) {
+    const suggestion = await suggestRes.json();
+    document.getElementById("aiSuggestionBox").style.display = "block";
+    document.getElementById("suggestionText").innerHTML =
+      `<strong>${suggestion.suggested_ward}</strong> 
+       (${Math.round(suggestion.confidence * 100)}% încredere)<br>
+       ${suggestion.comment}`;
+  } else {
+    console.warn("Nu s-a putut obține sugestia AI");
+  }
+} catch (err) {
+  console.error("Eroare la sugestie:", err);
+}
+      const res = await fetch("/api/admissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        alert("✅ Pacient internat cu succes!");
+        await loadAdmissions();
+        document.getElementById("admissionForm").reset();
+      } else {
+        alert("⚠️ Eroare la internare!");
+      }
+    });
+
+    document.getElementById("refreshBtn").addEventListener("click", loadAdmissions);
+    document.addEventListener("DOMContentLoaded", loadAdmissions);
+  </script>
+  <script src="/static/js/user.js"></script>
+</body>
+</html>

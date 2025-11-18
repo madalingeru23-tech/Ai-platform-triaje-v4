@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <nav>
+  <a href="/static/triaj.html">Triaj</a> |
+  <a href="/static/index.html">Internări</a> |
+  <a href="/static/wardmap.html">🗺️ Harta spitalului</a>
+</nav>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Internare Pacient</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>🏥 Internare Pacient</h1>
+    <p>Monitorizare pacienți și evidență internări</p>
+    <nav>
+      <a href="/static/triaj.html">🔹 Triaj Pacienți</a> |
+      <a href="/static/index.html" class="active">🏥 Internări</a>
+    </nav>
+  </header>
+
+  <main>
+    <section id="admissions">
+      <h2>Formular internare</h2>
+      <form id="admissionForm">
+        <input type="text" id="first_name" placeholder="Prenume" required />
+        <input type="text" id="last_name" placeholder="Nume" required />
+        <input type="text" id="reason" placeholder="Motiv internare" />
+        <select id="triage_level">
+          <option value="">Nivel triaj</option>
+          <option value="1">Roșu (I)</option>
+          <option value="2">Portocaliu (II)</option>
+          <option value="3">Galben (III)</option>
+          <option value="4">Verde (IV)</option>
+          <option value="5">Albastru (V)</option>
+        </select>
+        <button type="submit">✅ Creează internare</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>📋 Lista pacienților internați</h2>
+      <button id="refreshBtn">🔄 Actualizează</button>
+      <table id="admissionTable">
+        <thead>
+          <tr><th>ID</th><th>Prenume</th><th>Nume</th><th>Motiv</th><th>Nivel</th><th>Culoare</th><th>Timp</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+  // 🔹 Preluare automată din triaj (localStorage)
+  document.addEventListener("DOMContentLoaded", () => {
+    const saved = localStorage.getItem("last_triage");
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.first_name) document.getElementById("first_name").value = data.first_name;
+        if (data.last_name) document.getElementById("last_name").value = data.last_name;
+        if (data.level) document.getElementById("triage_level").value = data.level;
+        localStorage.removeItem("last_triage");
+      } catch (err) {
+        console.error("Eroare la preluarea datelor din triaj:", err);
+      }
+    }
+  });
+
+  async function loadAdmissions() {
+    const res = await fetch("/api/admissions");
+    const data = await res.json();
+    const tbody = document.querySelector("#admissionTable tbody");
+    tbody.innerHTML = "";
+    data.forEach(a => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${a.id}</td><td>${a.first_name}</td><td>${a.last_name}</td>
+        <td>${a.reason || "-"}</td><td>${a.triage_level}</td>
+        <td>${a.triage_color.toUpperCase()}</td><td>${a.timestamp}</td>`;
+      tbody.appendChild(row);
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("admissionForm");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const payload = {
+        first_name: document.getElementById("first_name").value,
+        last_name: document.getElementById("last_name").value,
+        reason: document.getElementById("reason").value,
+        triage_level: Number(document.getElementById("triage_level").value),
+        triage_color: document.querySelector("#triage_level").selectedOptions[0].text.split(" ")[0].toLowerCase()
+      };
+
+      const res = await fetch("/api/admissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (res.ok) {
+        alert("✅ Pacient internat!");
+        form.reset();
+        await loadAdmissions();
+      } else {
+        alert("⚠️ Eroare la internare!");
+      }
+    });
+
+    document.getElementById("refreshBtn").addEventListener("click", loadAdmissions);
+    loadAdmissions();
+  });
+  </script>
+   <script src="/static/js/user.js"></script>
+</body>
+</html>
